@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Stack;
 
 public class Calculator_UI extends JFrame implements ActionListener {
@@ -25,7 +26,7 @@ public class Calculator_UI extends JFrame implements ActionListener {
         contentPanel.setLayout(new BorderLayout());
 
         tx = new JLabel("0");
-        tx.setFont(new Font("Arial", Font.PLAIN, 40));
+        tx.setFont(new Font("Arial", Font.PLAIN, 26));
         contentPanel.add(tx);
         tx.setPreferredSize(new Dimension(tx.getPreferredSize().width, 60));
         tx.setOpaque(true);
@@ -63,7 +64,7 @@ public class Calculator_UI extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String s = e.getActionCommand();
         if ("0123456789".contains(s)) {
-            if(exp.equals("0")){
+            if(exp.equals("0") || exp.equals(" ")){
                 exp = s;
             }else{
                 exp += s;
@@ -76,76 +77,75 @@ public class Calculator_UI extends JFrame implements ActionListener {
             exp = "0";
             tx.setText(exp);
         } else if (s.equals("=")) {
-
-//            try {
-                String result = evaluateAnswer(exp);
-                tx.setText(result);
-//                display.setText(result);
-//                expression.setLength(0);
-//                expression.append(result);
-//            } catch (Exception ex) {
-//                display.setText("Error");
-//            }
+            String result = evaluateAnswer(exp);
+            tx.setText(result);
         }
-
-        tx.setText(exp);
     }
     public String evaluateAnswer(String s){
-        String post = toPostfix(s);
-        return post;
-    }
-    public String toPostfix(String infix) {
-        String post = "";
-        ArrayList<Character> op = new ArrayList<>();
-
-        for (char c : infix.toCharArray()) {
-            if (Character.isDigit(c)) {
-                post+=c;
-            } else if (isOperator(c)) {
-                while (!op.isEmpty() && precedence(c) <= precedence(op.get(op.size() - 1))) {
-                    post += op.remove(op.size() - 1);
-                }
-                op.add(c);
+        String[] o = s.split("[-+*/=]");
+        String[] op = new String[o.length - 1];
+        for (String split: o) {
+            if(split == ""){
+                return "Invalid";
             }
         }
+        int id = 0;
+        for(int i = 0; i<s.length();i++){
+            String xs = String.valueOf(s.charAt(i));
+            try{
+                if("*/+-".contains(xs)){
+                    op[id] = xs;
+                    id++;
+                }
+            }catch (ArrayIndexOutOfBoundsException e){
+                return "Invalid";
+            }
 
-        while (!op.isEmpty()) {
-            post+=op.remove(op.size() - 1);
         }
-        return post;
-    }
-
-    public boolean isOperator(char c) {
-        return c == '+' || c == '-' || c == '*' || c == '/';
-    }
-
-    public int precedence(char c) {
-        switch (c) {
-            case '+':
-            case '-':
-                return 1;
-            case '*':
-            case '/':
-                return 2;
-            default:
-                return 0;
+        ArrayList<String> ex = new ArrayList<>();
+        int n = o.length + op.length;
+        int id1 = 0,id2 = 0;
+        for(int i = 0; i<n;i++){
+            if(i%2==0){
+                ex.add(o[id1]);
+                id1++;
+            }else{
+                ex.add(op[id2]);
+                id2++;
+            }
         }
-    }
-
-    public static double applyOperator(double a, double b, char op) {
-        switch (op) {
-            case '+':
-                return a + b;
-            case '-':
-                return a - b;
-            case '*':
-                return a * b;
-            case '/':
-                return a / b;
-            case '^':
-                return Math.pow(a, b);
-            default:
-                return 0.0;
+        String order = "";
+        for(String ord :op){
+            if("*/".contains(ord)){
+                order = ord + order;
+            }else if("+-".contains(ord)){
+                order = order + ord;
+            }
         }
+        for(int i = 0;i<order.length();i++){
+            String ope = String.valueOf(order.charAt(i));
+            int idx = ex.indexOf(ope);
+            double n1 = Double.parseDouble(ex.get(idx-1));
+            double n2 =  Double.parseDouble(ex.get(idx+1));
+            double ans = getAns(n1,n2,ope);
+            ex.remove(idx);
+            ex.remove(idx);
+            ex.remove(idx-1);
+            ex.add(idx-1,ans+"");
+        }
+        return ex.get(0);
+    }
+    public double getAns(double x, double y,String ch){
+        switch (ch){
+            case "+":
+                return x+y;
+            case "-":
+                return x-y;
+            case "*":
+                return x*y;
+            case "/":
+                return x/y;
+        }
+        return 0;
     }
 }
